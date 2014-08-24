@@ -1,14 +1,13 @@
 __author__ = 'durgadas_kamath'
 
 from webob import Response
-from webob import Request
 from webob.dec import wsgify
 from paste import httpserver
 from paste.deploy import loadapp
 import config
+import os
 
 config.CONF(default_config_files=['test.conf'])
-
 
 @wsgify
 def application(req):
@@ -50,6 +49,6 @@ def filter_factory1(global_config, **local_config):
 def filter_factory2(global_config, **local_config):
     return my_filter2
 
-
-wsgi_app = loadapp('config:D:/Prog_Development/github/PyFrameworks/MiddlewareApp/src/paste.ini')
+paste_loc = 'config:' + os.path.abspath(os.path.dirname(__file__)) + "\\paste.ini"
+wsgi_app = loadapp(paste_loc)
 httpserver.serve(wsgi_app, host='127.0.0.1', port=8080)
