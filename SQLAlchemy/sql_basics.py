@@ -7,7 +7,8 @@ import os
 print sqlalchemy.__version__
 
 os.remove('example.db') #Removing the example.db since below create operations will fail if it already exists
-db = create_engine('sqlite:///example.db')
+
+db = create_engine('sqlite:///example.db') #this will create example.db in your working directory
 db.echo = False
 
 metadata = MetaData(db)
