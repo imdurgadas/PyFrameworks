@@ -1,6 +1,7 @@
 __author__ = 'durgadas_kamath'
 
 from webob import Response
+from webob import exc
 from webob.dec import wsgify
 from paste import httpserver
 from paste.deploy import loadapp
@@ -11,14 +12,22 @@ config.CONF(default_config_files=['test.conf'])
 
 @wsgify
 def application(req):
-    res = Response('Trying out stuffs using WSGI paste-deploy ~ durgadas')
-    res.status = 201
-    print res
+    print ("--------- Printing values from conf files : oslo.config -------------- ")
+    print ('Enable: {}'.format(config.CONF.durgadas.enable))
+    print ("Name =  {} ".format(config.CONF.durgadas.name))
+    print ("Passion = {}".format(config.CONF.durgadas.passion))
+
+
+    res = Response('Yiepeeee.... You have successfully got here !!!!!!!!!! ')
+    res.status = 200
+
     return res
 
 
 def app_factory(global_config, **local_config):
     print ("global_config %s " % global_config)
+
+    #Iterating over the configs passed from the paste-ini file
     if local_config is not None:
         for key, value in local_config.iteritems():
             print ("%s = %s" % (key, value))
@@ -27,27 +36,19 @@ def app_factory(global_config, **local_config):
 
 
 @wsgify.middleware()
-def my_filter1(req, app):
-    print "my filter1 was called ..."
-    print ('Enable: {}'.format(config.CONF.test.enable))
-    return app(req)
+def auth_filter(req, app):
+    print "Inside auth_filter"
+    #Only allow requests from admin_token whose value is in the conf file
 
-
-@wsgify.middleware()
-def my_filter2(req, app):
-    print "my filter2 was called ..."
-    print ("Name =  {} ".format(config.CONF.durgadas.name))
-    print ("Passion = {}".format(config.CONF.durgadas.passion))
+    if req.headers.get('X-Auth-Token') != config.CONF.token.admin_token:
+        return exc.HTTPForbidden()
 
     return app(req)
 
 
-def filter_factory1(global_config, **local_config):
-    return my_filter1
+def auth_factory(global_config, **local_config):
+    return auth_filter
 
-
-def filter_factory2(global_config, **local_config):
-    return my_filter2
 
 paste_loc = 'config:' + os.path.abspath(os.path.dirname(__file__)) + "\\paste.ini"
 wsgi_app = loadapp(paste_loc)
